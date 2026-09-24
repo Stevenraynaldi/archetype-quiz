@@ -768,6 +768,12 @@ function Result({ top, second, hybrid, scores, ranked, maxScore, restart, copy, 
           supplied the five shapes and that stage logic. The questions, scoring, written profiles and
           the affinity mapping here are original.
         </p>
+        <p style={{ fontSize: 13, marginTop: 16, fontFamily: MONO, letterSpacing: ".04em" }}>
+          <a href="https://stevenraynaldili.com" target="_blank" rel="noopener noreferrer"
+            style={{ color: INK, borderBottom: `1px solid ${INK}`, textDecoration: "none" }}>
+            stevenraynaldili.com ↗
+          </a>
+        </p>
       </div>
     </div>
   );
