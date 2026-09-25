@@ -420,6 +420,7 @@ export default function ArchetypeQuiz() {
   const [idx, setIdx] = useState(0);
   const [answers, setAnswers] = useState(Array(Q.length).fill(null));
   const [copied, setCopied] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
   const timer = useRef(null);
 
   useEffect(() => () => clearTimeout(timer.current), []);
@@ -449,7 +450,7 @@ export default function ArchetypeQuiz() {
 
   const restart = () => {
     setAnswers(Array(Q.length).fill(null));
-    setIdx(0); setCopied(false); setStage("intro");
+    setIdx(0); setCopied(false); setLinkCopied(false); setStage("intro");
     setShuffles(Q.map((q) => shuffled(q.o.length)));
   };
 
@@ -459,6 +460,19 @@ export default function ArchetypeQuiz() {
       ranked.map((k) => `${ARCH[k].name}: ${scores[k]}`).join("\n");
     try { await navigator.clipboard.writeText(txt); setCopied(true); setTimeout(() => setCopied(false), 2000); }
     catch { setCopied(false); }
+  };
+
+  // Native share sheet on phones; falls back to copying the link on desktop.
+  const share = async () => {
+    const t = ARCH[top], s = ARCH[second];
+    const url = window.location.origin + window.location.pathname;
+    const text = `I got ${t.name}${hybrid ? ` / ${s.name}` : ""} on The Five Archetypes. Which one are you?`;
+    if (navigator.share) {
+      try { await navigator.share({ title: "The Five Archetypes", text, url }); } catch { /* dismissed */ }
+      return;
+    }
+    try { await navigator.clipboard.writeText(`${text} ${url}`); setLinkCopied(true); setTimeout(() => setLinkCopied(false), 2000); }
+    catch { setLinkCopied(false); }
   };
 
   const css = `
@@ -561,7 +575,8 @@ export default function ArchetypeQuiz() {
 
         {stage === "result" && <Result
           top={top} second={second} hybrid={hybrid} scores={scores} ranked={ranked}
-          maxScore={maxScore} restart={restart} copy={copy} copied={copied} />}
+          maxScore={maxScore} restart={restart} copy={copy} copied={copied}
+          share={share} linkCopied={linkCopied} />}
 
       </div>
     </div>
@@ -569,7 +584,7 @@ export default function ArchetypeQuiz() {
 }
 
 /* ---------- result ---------- */
-function Result({ top, second, hybrid, scores, ranked, maxScore, restart, copy, copied }) {
+function Result({ top, second, hybrid, scores, ranked, maxScore, restart, copy, copied, share, linkCopied }) {
   const t = ARCH[top], s = ARCH[second];
   const [shown, setShown] = useState(false);
   const [open, setOpen] = useState(null);
@@ -732,8 +747,12 @@ function Result({ top, second, hybrid, scores, ranked, maxScore, restart, copy, 
       </div>
 
       <div className="flex gap-3 mt-9" style={{ flexWrap: "wrap" }}>
-        <button onClick={copy} className="aq-btn"
+        <button onClick={share} className="aq-btn"
           style={{ background: INK, color: PAPER, fontFamily: MONO, fontSize: 11.5, letterSpacing: ".12em", textTransform: "uppercase", padding: "14px 26px", border: "none", cursor: "pointer" }}>
+          {linkCopied ? "Link copied" : "Share with a friend"}
+        </button>
+        <button onClick={copy} className="aq-btn"
+          style={{ background: "none", color: INK, fontFamily: MONO, fontSize: 11.5, letterSpacing: ".12em", textTransform: "uppercase", padding: "14px 26px", border: `1px solid ${INK}`, cursor: "pointer" }}>
           {copied ? "Copied" : "Copy result"}
         </button>
         <button onClick={restart} className="aq-btn"
